@@ -1,0 +1,67 @@
+import os
+import cv2
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from sklearn.model_selection import train_test_split
+
+os.makedirs('my_dataset/class_A', exist_ok=True)
+os.makedirs('my_dataset/class_B', exist_ok=True)
+
+img_base = cv2.imread('download.jpg')
+
+if img_base is not None:
+    for i in range(30):
+        angle = np.random.uniform(-15, 15)
+        h, w = img_base.shape[:2]
+        M = cv2.getRotationMatrix2D((w/2, h/2), angle, 1.0)
+        rotated = cv2.warpAffine(img_base, M, (w, h))
+        resized_A = cv2.resize(rotated, (64, 64))
+        cv2.imwrite(f'my_dataset/class_A/img_{i}.jpg', resized_A)
+        
+        flipped = cv2.flip(img_base, 1)
+        brightness_factor = np.random.uniform(0.6, 1.4)
+        changed_brightness = np.clip(flipped * brightness_factor, 0, 255).astype(np.uint8)
+        resized_B = cv2.resize(changed_brightness, (64, 64))
+        cv2.imwrite(f'my_dataset/class_B/img_{i}.jpg', resized_B)
+
+X_data = []
+y_data = []
+classes = ['class_A', 'class_B']
+
+for class_idx, class_name in enumerate(classes):
+    class_folder = os.path.join('my_dataset', class_name)
+    for file_name in os.listdir(class_folder):
+        file_path = os.path.join(class_folder, file_name)
+        img_loaded = cv2.imread(file_path)
+        if img_loaded is not None:
+            X_data.append(img_loaded)
+            y_data.append(class_idx)
+
+X_data = np.array(X_data) / 255.0
+y_data = np.array(y_data)
+
+X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2, random_state=42)
+
+print(len(X_data))
+print(X_train.shape)
+
+model = models.Sequential([
+    layers.Input(shape=(64, 64, 3)),
+    layers.Conv2D(16, (3, 3), activation='relu'),
+    layers.MaxPooling2D((2, 2)),
+    layers.Conv2D(32, (3, 3), activation='relu'),
+    layers.MaxPooling2D((2, 2)),
+    layers.Flatten(),
+    layers.Dense(32, activation='relu'),
+    layers.Dense(2, activation='softmax')
+])
+
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=8, batch_size=4)
+
+test_loss, test_acc = model.evaluate(X_test, y_test)
+print(test_acc)
