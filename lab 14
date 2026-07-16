@@ -1,0 +1,23 @@
+import cv2
+import matplotlib.pyplot as plt
+from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input, decode_predictions
+import numpy as np
+
+model = MobileNetV2(weights='imagenet')
+
+img = cv2.imread('download.jpg')
+if img is not None:
+    img_resized = cv2.resize(img, (224, 224))
+    x = np.expand_dims(img_resized, axis=0)
+    x = preprocess_input(x)
+
+    preds = model.predict(x)
+    results = decode_predictions(preds, top=3)[0]
+
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    plt.imshow(img_rgb)
+    plt.axis('off')
+    plt.show()
+
+    for r in results:
+        print(f"{r[1]}: {r[2]*100:.2f}%")
