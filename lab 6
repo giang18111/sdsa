@@ -1,0 +1,35 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+img_q = cv2.imread('download.jpg', cv2.IMREAD_GRAYSCALE)
+img_c = cv2.imread('download2.jpg', cv2.IMREAD_GRAYSCALE)
+
+if img_q is not None and img_c is not None:
+    q_resized = cv2.resize(img_q, (64, 64)).flatten()
+    c_resized = cv2.resize(img_c, (64, 64)).flatten()
+    raw_distance = np.sqrt(np.sum((q_resized - c_resized) ** 2))
+
+    def get_normalized_hist(img):
+        hist = np.zeros(256, dtype=float)
+        for i in range(img.shape[0]):
+            for j in range(img.shape[1]):
+                hist[img[i, j]] += 1
+        return hist / np.sum(hist)
+
+    hist_q = get_normalized_hist(img_q)
+    hist_c = get_normalized_hist(img_c)
+    hist_distance = np.sqrt(np.sum((hist_q - hist_c) ** 2))
+
+    plt.figure(figsize=(10, 5))
+    plt.subplot(1, 2, 1)
+    plt.imshow(img_q, cmap='gray')
+    plt.axis('off')
+
+    plt.subplot(1, 2, 2)
+    plt.imshow(img_c, cmap='gray')
+    plt.axis('off')
+    plt.show()
+
+    print(raw_distance)
+    print(hist_distance)
