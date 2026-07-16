@@ -1,0 +1,27 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.datasets import cifar10
+
+(X_train, y_train), (X_test, y_test) = cifar10.load_data()
+
+X_train = X_train[:2000] / 255.0
+X_test = X_test[:500] / 255.0
+
+base_model = tf.keras.applications.MobileNetV2(input_shape=(32, 32, 3),
+                                               include_top=False,
+                                               weights='imagenet')
+base_model.trainable = False
+
+model = models.Sequential([
+    layers.Input(shape=(32, 32, 3)),
+    base_model,
+    layers.GlobalAveragePooling2D(),
+    layers.Dense(10, activation='softmax')
+])
+
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.fit(X_train, y_train[:2000], epochs=3)
+
+base_model.trainable = True
+model.compile(optimizer=tf.keras.optimizers.Adam(1e-5), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.fit(X_train, y_train[:2000], epochs=1)
