@@ -4,10 +4,13 @@ from tensorflow.keras.datasets import mnist
 
 (X_train, y_train), (X_test, y_test) = mnist.load_data()
 X_train = (X_train[:10000] / 255.0).astype('float32')
+y_train = y_train[:10000]
 X_test = (X_test[:2000] / 255.0).astype('float32')
+y_test = y_test[:2000]
 
 model = models.Sequential([
-    layers.Flatten(input_shape=(28, 28)),
+    layers.Input(shape=(28, 28)),
+    layers.Flatten(),
     layers.Dense(128, activation='relu'),
     layers.Dense(64, activation='relu'),
     layers.Dense(10, activation='softmax')
@@ -31,8 +34,8 @@ for epoch in range(epochs):
             logits = model(x_batch, training=True)
             loss_value = loss_fn(y_batch, logits)
             
-        grads = tape.gradient(loss_value, model.trainable_weights)
-        optimizer.apply_gradients(zip(grads, model.trainable_weights))
+        grads = tape.gradient(loss_value, model.trainable_variables)
+        optimizer.apply_gradients(zip(grads, model.trainable_variables))
         
         epoch_loss += loss_value.numpy()
         num_batches += 1
