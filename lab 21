@@ -1,0 +1,30 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models
+
+img_shape = (224, 224, 3)
+
+resnet = tf.keras.applications.ResNet50(include_top=False, weights='imagenet', input_shape=img_shape)
+vgg = tf.keras.applications.VGG16(include_top=False, weights='imagenet', input_shape=img_shape)
+
+resnet.trainable = False
+vgg.trainable = False
+
+model_resnet = models.Sequential([
+    layers.Input(shape=img_shape),
+    resnet, 
+    layers.GlobalAveragePooling2D(), 
+    layers.Dense(3, activation='softmax')
+])
+
+model_vgg = models.Sequential([
+    layers.Input(shape=img_shape),
+    vgg, 
+    layers.GlobalAveragePooling2D(), 
+    layers.Dense(3, activation='softmax')
+])
+
+model_resnet.compile(optimizer='adam', loss='categorical_crossentropy')
+model_vgg.compile(optimizer='adam', loss='categorical_crossentropy')
+
+print(model_resnet.summary())
+print(model_vgg.summary())
