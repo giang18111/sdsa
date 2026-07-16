@@ -1,0 +1,28 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+def compute_histogram_from_scratch(gray_img):
+    hist = np.zeros(256, dtype=int)
+    h, w = gray_img.shape
+    for i in range(h):
+        for j in range(w):
+            val = gray_img[i, j]
+            hist[val] += 1
+    return hist
+
+img = cv2.imread('download.jpg', cv2.IMREAD_GRAYSCALE)
+
+if img is not None:
+    my_hist = compute_histogram_from_scratch(img)
+
+    plt.figure(figsize=(12, 5))
+    plt.subplot(1, 2, 1)
+    plt.imshow(img, cmap='gray')
+    plt.axis('off')
+
+    plt.subplot(1, 2, 2)
+    plt.plot(my_hist, color='darkred')
+    plt.xlim([0, 255])
+    plt.grid(True)
+    plt.show()
