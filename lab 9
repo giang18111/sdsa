@@ -1,0 +1,50 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+def convolution_from_scratch(img, kernel):
+    img_h, img_w = img.shape
+    k_h, k_w = kernel.shape
+    
+    pad_h = k_h // 2
+    pad_w = k_w // 2
+    
+    padded_img = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant', constant_values=0)
+    output = np.zeros_like(img, dtype=float)
+    
+    for i in range(img_h):
+        for j in range(img_w):
+            roi = padded_img[i:i+k_h, j:j+k_w]
+            output[i, j] = np.sum(roi * kernel)
+            
+    return np.clip(output, 0, 255).astype(np.uint8)
+
+img = cv2.imread('download.jpg', cv2.IMREAD_GRAYSCALE)
+
+if img is not None:
+    sobel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=float)
+    sobel_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=float)
+
+    gx_scratch = convolution_from_scratch(img, sobel_x).astype(float)
+    gy_scratch = convolution_from_scratch(img, sobel_y).astype(float)
+    grad_scratch = np.sqrt(gx_scratch**2 + gy_scratch**2)
+    grad_scratch = np.clip(grad_scratch, 0, 255).astype(np.uint8)
+
+    gx_cv2 = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=3)
+    gy_cv2 = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=3)
+    grad_cv2 = cv2.magnitude(gx_cv2, gy_cv2)
+    grad_cv2 = np.clip(grad_cv2, 0, 255).astype(np.uint8)
+
+    plt.figure(figsize=(15, 5))
+    plt.subplot(1, 3, 1)
+    plt.imshow(img, cmap='gray')
+    plt.axis('off')
+
+    plt.subplot(1, 3, 2)
+    plt.imshow(grad_scratch, cmap='gray')
+    plt.axis('off')
+
+    plt.subplot(1, 3, 3)
+    plt.imshow(grad_cv2, cmap='gray')
+    plt.axis('off')
+    plt.show()
