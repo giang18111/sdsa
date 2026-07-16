@@ -1,0 +1,37 @@
+import cv2
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+
+def extract_hist(image_path):
+    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        return None
+    hist = cv2.calcHist([img], [0], None, [256], [0, 256])
+    cv2.normalize(hist, hist)
+    return hist.flatten()
+
+h1 = extract_hist('download.jpg')
+h2 = extract_hist('download2.jpg')
+
+if h1 is not None and h2 is not None:
+    X = []
+    y = []
+    for _ in range(50):
+        X.append(h1 + np.random.normal(0, 0.01, h1.shape))
+        y.append(0)
+    for _ in range(50):
+        X.append(h2 + np.random.normal(0, 0.01, h2.shape))
+        y.append(1)
+
+    X = np.array(X)
+    y = np.array(y)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_test_split=0.2, random_state=42)
+
+    knn = KNeighborsClassifier(n_neighbors=3)
+    knn.fit(X_train, y_train)
+
+    preds = knn.predict(X_test)
+    print(accuracy_score(y_test, preds))
