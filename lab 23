@@ -1,0 +1,11 @@
+import tensorflow as tf
+import numpy as np
+
+model = tf.keras.applications.convnext.ConvNeXtTiny(weights='imagenet')
+
+dummy_video_frames = np.random.rand(1, 224, 224, 3) * 255.0
+preds = model.predict(dummy_video_frames)
+
+results = tf.keras.applications.convnext.decode_predictions(preds, top=3)[0]
+for r in results:
+    print(f"{r[1]}: {r[2]*100:.2f}%")
