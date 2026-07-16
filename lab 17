@@ -1,0 +1,47 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.datasets import mnist
+
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+X_train = (X_train[:10000] / 255.0).astype('float32')
+X_test = (X_test[:2000] / 255.0).astype('float32')
+
+model = models.Sequential([
+    layers.Flatten(input_shape=(28, 28)),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(10, activation='softmax')
+])
+
+loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+
+train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train)).batch(64)
+test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test)).batch(64)
+
+epochs = 5
+
+for epoch in range(epochs):
+    print(f"\nEpoch {epoch + 1}/{epochs}")
+    epoch_loss = 0.0
+    num_batches = 0
+    
+    for step, (x_batch, y_batch) in enumerate(train_dataset):
+        with tf.GradientTape() as tape:
+            logits = model(x_batch, training=True)
+            loss_value = loss_fn(y_batch, logits)
+            
+        grads = tape.gradient(loss_value, model.trainable_weights)
+        optimizer.apply_gradients(zip(grads, model.trainable_weights))
+        
+        epoch_loss += loss_value.numpy()
+        num_batches += 1
+        
+    avg_loss = epoch_loss / num_batches
+    
+    test_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy()
+    for x_batch_test, y_batch_test in test_dataset:
+        test_logits = model(x_batch_test, training=False)
+        test_acc_metric.update_state(y_batch_test, test_logits)
+        
+    print(f"Loss: {avg_loss:.4f} - Test Acc: {test_acc_metric.result().numpy()*100:.2f}%")
