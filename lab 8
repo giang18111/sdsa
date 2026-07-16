@@ -1,0 +1,48 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+def convolution_from_scratch(img, kernel):
+    img_h, img_w = img.shape
+    k_h, k_w = kernel.shape
+    
+    pad_h = k_h // 2
+    pad_w = k_w // 2
+    
+    padded_img = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant', constant_values=0)
+    output = np.zeros_like(img, dtype=float)
+    
+    for i in range(img_h):
+        for j in range(img_w):
+            roi = padded_img[i:i+k_h, j:j+k_w]
+            output[i, j] = np.sum(roi * kernel)
+            
+    return np.clip(output, 0, 255).astype(np.uint8)
+
+img = cv2.imread('download.jpg', cv2.IMREAD_GRAYSCALE)
+
+if img is not None:
+    gaussian_kernel = np.array([
+        [1,  4,  6,  4, 1],
+        [4, 16, 24, 16, 4],
+        [6, 24, 36, 24, 6],
+        [4, 16, 24, 16, 4],
+        [1,  4,  6,  4, 1]
+    ], dtype=float) / 256.0
+
+    smooth_scratch = convolution_from_scratch(img, gaussian_kernel)
+    smooth_cv2 = cv2.GaussianBlur(img, (5, 5), 0)
+
+    plt.figure(figsize=(15, 5))
+    plt.subplot(1, 3, 1)
+    plt.imshow(img, cmap='gray')
+    plt.axis('off')
+
+    plt.subplot(1, 3, 2)
+    plt.imshow(smooth_scratch, cmap='gray')
+    plt.axis('off')
+
+    plt.subplot(1, 3, 3)
+    plt.imshow(smooth_cv2, cmap='gray')
+    plt.axis('off')
+    plt.show()
