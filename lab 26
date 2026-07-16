@@ -1,0 +1,17 @@
+!pip install transformers
+
+from PIL import Image
+from transformers import CLIPProcessor, CLIPModel
+
+model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+
+image = Image.open("download.jpg")
+texts = ["a photo of flowers", "a photo of a cat", "a photo of a car"]
+
+inputs = processor(text=texts, images=image, return_tensors="pt", padding=True)
+outputs = model(**inputs)
+
+probs = outputs.logits_per_image.softmax(dim=-1)
+for i, t in enumerate(texts):
+    print(f"{t}: {probs[0][i].item()*100:.2f}%")
