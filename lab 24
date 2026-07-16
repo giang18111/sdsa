@@ -1,0 +1,27 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models
+import numpy as np
+import matplotlib.pyplot as plt
+
+def simple_unet(input_size=(128, 128, 3)):
+    inputs = layers.Input(input_size)
+    c1 = layers.Conv2D(16, (3, 3), activation='relu', padding='same')(inputs)
+    p1 = layers.MaxPooling2D((2, 2))(c1)
+    c2 = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(p1)
+    u1 = layers.UpSampling2D((2, 2))(c2)
+    outputs = layers.Conv2D(1, (1, 1), activation='sigmoid')(u1)
+    return models.Model(inputs, outputs)
+
+model = simple_unet()
+dummy_img = np.random.rand(1, 128, 128, 3)
+pred_mask = model.predict(dummy_img)
+
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)
+plt.imshow(dummy_img[0])
+plt.axis('off')
+
+plt.subplot(1, 2, 2)
+plt.imshow(pred_mask[0, :, :, 0], cmap='gray')
+plt.axis('off')
+plt.show()
